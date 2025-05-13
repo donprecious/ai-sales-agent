@@ -109,4 +109,23 @@ export class LeadService {
       )
       .exec();
   }
+
+  // Find leads with pagination and filtering
+  async findLeads(
+    filter: any,
+    skip: number,
+    limit: number,
+  ): Promise<LeadDocument[]> {
+    return this.leadModel
+      .find(filter)
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+  }
+
+  // Count leads with filtering
+  async countLeads(filter: any): Promise<number> {
+    return this.leadModel.countDocuments(filter).exec();
+  }
 }

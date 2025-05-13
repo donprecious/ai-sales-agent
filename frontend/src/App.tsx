@@ -1,6 +1,9 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route, Link as RouterLink } from 'react-router-dom';
 import ChatPage from './components/ChatPage';
-import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
+import AdminLeadsPage from './pages/AdminLeadsPage';
+import LeadDetailPage from './pages/LeadDetailPage';
+import { CssBaseline, ThemeProvider, createTheme, Box, AppBar, Toolbar, Typography, Button } from '@mui/material';
 
 // A simple theme for now, can be expanded later
 const theme = createTheme({
@@ -25,9 +28,28 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-        <ChatPage />
-      </Box>
+      <BrowserRouter>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+          <AppBar position="static">
+            <Toolbar>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                Sales Rep AI
+              </Typography>
+              <Button color="inherit" component={RouterLink} to="/">Chat</Button>
+              <Button color="inherit" component={RouterLink} to="/admin/leads">Admin Leads</Button>
+            </Toolbar>
+          </AppBar>
+          <Box component="main" sx={{ flexGrow: 1, p: 0, overflowY: 'auto' }}> {/* Adjusted padding */}
+            <Routes>
+              <Route path="/" element={<ChatPage />} />
+              <Route path="/admin/leads" element={<AdminLeadsPage />} />
+              <Route path="/admin/leads/:leadId" element={<LeadDetailPage />} />
+              {/* You can add a 404 page here if needed */}
+              <Route path="*" element={<div><h2>404 Not Found</h2><RouterLink to="/">Go Home</RouterLink></div>} />
+            </Routes>
+          </Box>
+        </Box>
+      </BrowserRouter>
     </ThemeProvider>
   );
 };

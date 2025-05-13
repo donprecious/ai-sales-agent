@@ -5,7 +5,13 @@ import {
   IsOptional,
   IsString,
   IsMongoId,
+  IsEnum,
+  IsInt,
+  Min,
+  Max,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { RelevanceTag } from '../../database/schemas/lead.schema';
 
 export class ConversationRequestDto {
   @IsOptional() // Optional for new conversations
@@ -27,3 +33,26 @@ export class ConversationRequestDto {
 }
 
 // We might need response DTOs later, but let's start with the request.
+
+export class GetLeadsQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100) // Max 100 items per page
+  limit?: number = 10;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsEnum(RelevanceTag, { message: 'Invalid relevance tag' })
+  relevanceTag?: RelevanceTag; // Filter by qualification/relevance
+}

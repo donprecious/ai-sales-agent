@@ -13,7 +13,7 @@ import {
   LeadDocument,
   RelevanceTag,
 } from '../database/schemas/lead.schema';
-import { ConversationRequestDto } from './dto/conversation.dto';
+import { ConversationRequestDto, GetLeadsQueryDto } from './dto/conversation.dto'; // Added GetLeadsQueryDto
 import { Types } from 'mongoose';
 import { AblyService } from '../ably/ably.service'; // Import AblyService
 import { ConfigService } from '@nestjs/config'; // Import ConfigService
@@ -279,5 +279,45 @@ export class ConversationService {
       );
     }
     this.logger.log(`Stored full AI response for lead ${leadId}`);
+  }
+
+  async getLeads(
+    query: GetLeadsQueryDto,
+  ): Promise<{ leads: LeadDocument[]; total: number; page: number; limit: number }> {
+    this.logger.log(
+      `Fetching leads with query: ${JSON.stringify(query)}`,
+    );
+    const { page = 1, limit = 10, status, relevanceTag } = query;
+
+    const filter: any = {};
+    if (status) {
+      filter.status = status;
+    }
+    if (relevanceTag) {
+      filter.relevanceTag = relevanceTag;
+    }
+
+    const skip = (page - 1) * limit;
+
+    // TODO: Ensure leadService has findLeads and countLeads methods
+    const leads = await this.leadService.findLeads(filter, skip, limit);
+    const total = await this.leadService.countLeads(filter);
+
+    return {
+      leads,
+      total,
+      page,
+      limit,
+    };
+  }
+
+  async getLeadById(id: string): Promise<LeadDocument | null> {
+    this.logger.log(`Fetching lead by ID: ${id}`);
+    if (!Types.ObjectId.isValid(id)) {
+      this.logger.warn(`Invalid leadId format for getLeadById: ${id}`);
+      // Consider throwing BadRequestException here or let controller handle NotFound
+      return null;
+    }
+    return this.leadService.getLeadById(id);
   }
 } // End of ConversationService class

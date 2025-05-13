@@ -4,14 +4,19 @@ import {
   Body,
   Logger,
   HttpException,
-  // HttpStatus, // Removed unused import
   InternalServerErrorException,
+  Get, // Added Get decorator
+  Query, // Added Query decorator
+  Param, // Added Param decorator
+  NotFoundException, // Added NotFoundException
 } from '@nestjs/common';
 // Removed Response from 'express'
 import { ConversationService } from './conversation.service';
-import { ConversationRequestDto } from './dto/conversation.dto';
+import { ConversationRequestDto, GetLeadsQueryDto } from './dto/conversation.dto'; // Added GetLeadsQueryDto
 // Removed Observable, map, catchError, throwError from 'rxjs'
 // Removed Sse, MessageEvent
+// Import LeadDocument for return type hint if needed, though service handles it
+// import { LeadDocument } from '../database/schemas/lead.schema';
 
 // Define the expected response type for the controller method
 interface ConversationStatusResponse {
@@ -67,6 +72,65 @@ export class ConversationController {
       // For other errors, throw a standard NestJS exception
       throw new InternalServerErrorException(
         `Failed to initiate conversation: ${errorMessage}`,
+      );
+    }
+  }
+
+  @Get('leads') // New endpoint for fetching leads
+  async getLeads(@Query() queryDto: GetLeadsQueryDto) {
+    this.logger.log(
+      `Received request to fetch leads with query: ${JSON.stringify(queryDto)}`,
+    );
+    try {
+      // The service method already returns the desired structure
+      return await this.conversationService.getLeads(queryDto);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Unknown error fetching leads.';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
+      this.logger.error(
+        `Error fetching leads: ${errorMessage}`,
+        errorStack,
+      );
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        `Failed to fetch leads: ${errorMessage}`,
+      );
+    }
+  }
+
+  @Get('leads/:id') // New endpoint for fetching a single lead by ID
+  async getLeadById(@Param('id') id: string) {
+    this.logger.log(`Received request to fetch lead with ID: ${id}`);
+    try {
+      const lead = await this.conversationService.getLeadById(id); // Assumes getLeadById exists in ConversationService
+      if (!lead) {
+        throw new NotFoundException(`Lead with ID ${id} not found`);
+      }
+      return lead;
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Unknown error fetching lead details.';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
+      this.logger.error(
+        `Error fetching lead ${id}: ${errorMessage}`,
+        errorStack,
+      );
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        `Failed to fetch lead ${id}: ${errorMessage}`,
       );
     }
   }
