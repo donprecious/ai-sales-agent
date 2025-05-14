@@ -28,10 +28,15 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
       onSubmit={(e) => { e.preventDefault(); handleSend(); }} // Handle form submission
       sx={{
         display: 'flex',
-        alignItems: 'center', // Align items vertically
-        padding: '16px', // Consistent padding
-        borderTop: (theme) => `1px solid ${theme.palette.divider}`, // Use theme for border color
-        backgroundColor: 'background.paper', // Match paper background
+        alignItems: 'center',
+        padding: '8px 16px', // Reduced vertical padding, keep horizontal
+        borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+        // Apply glassmorphism directly to the Box
+        backgroundColor: 'rgba(48, 25, 52, 0.55)', // Same as MuiPaper base for consistency
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        // No border here, as the borderTop is already defined.
+        // No boxShadow here, to keep it flatter than elevated Paper components.
       }}
     >
       <TextField
@@ -42,7 +47,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
         onChange={(e) => setInputValue(e.target.value)}
         onKeyPress={handleKeyPress} // Keep for Shift+Enter for new line if desired in future
         multiline // Allow multiline input
-        maxRows={5} // Limit the number of rows for multiline
+        maxRows={2} // Reduced maxRows to limit height
         sx={{
           marginRight: 2, // Increased margin
           '& .MuiOutlinedInput-root': { // Style the input field itself

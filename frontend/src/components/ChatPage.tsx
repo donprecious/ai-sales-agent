@@ -206,9 +206,9 @@ const ChatPage: React.FC = () => {
 
   // Main chat layout
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', backgroundColor: 'background.default' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, width: '100%', backgroundColor: 'transparent' }}>
       {/* Header */}
-      <Paper elevation={2} sx={{ padding: 2, backgroundColor: 'primary.main', color: 'white', textAlign: 'center', flexShrink: 0 }}>
+      <Paper elevation={2} sx={{ padding: 2, textAlign: 'center', flexShrink: 0 /* MuiPaper theme override will provide background */ }}>
         <Typography variant="h6">AI Sales Representative</Typography>
       </Paper>
 

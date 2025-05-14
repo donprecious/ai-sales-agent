@@ -29,14 +29,19 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isAiTyping }) => {
                 elevation={1} // Reduced elevation for a flatter look, can be adjusted
                 sx={{
                   padding: '10px 15px',
-                  backgroundColor: msg.sender === 'user' ? 'primary.light' : 'background.paper', // Adjusted colors
-                  color: msg.sender === 'user' ? 'primary.contrastText' : 'text.primary',
+                  // Use semi-transparent colors to allow backdropFilter from MuiPaper theme to work
+                  backgroundColor: msg.sender === 'user'
+                    ? 'rgba(167, 139, 250, 0.35)' // Semi-transparent light purple for user
+                    : 'rgba(70, 50, 80, 0.45)',   // Slightly different semi-transparent dark purple for AI
+                  color: 'text.primary', // Ensure text is readable on these backgrounds
                   borderRadius: msg.sender === 'user' ? '20px 20px 5px 20px' : '20px 20px 20px 5px',
                   maxWidth: '70%',
-                  wordBreak: 'break-word', // Ensure long messages wrap
+                  wordBreak: 'break-word',
+                  // The MuiPaper theme override in App.tsx should provide:
+                  // backdropFilter, WebkitBackdropFilter, border, boxShadow, and base borderRadius (if not overridden here)
                 }}
               >
-                <Typography variant="body1" component="span">{msg.message}</Typography>
+                <Typography variant="body1" component="span" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>{msg.message}</Typography>
                 {msg.sender === 'ai' && isLastMessage && isAiTyping && (
                   <span className="typing-cursor"></span>
                 )}
