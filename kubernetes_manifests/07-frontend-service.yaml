@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: sales-rep-ai-ns # Matches the namespace created earlier
+  labels:
+    app: frontend
+spec:
+  type: ClusterIP # Exposes the service on an internal IP in the cluster
+  selector:
+    app: frontend # Selects pods with the label 'app: frontend' (from the frontend Deployment)
+  ports:
+    - protocol: TCP
+      port: 80 # Port the service will be available on within the cluster
+      # Target port should match the containerPort in the frontend-deployment.yaml
+      # Assuming frontend container serves on port 80 for production.
+      targetPort: 80
+      name: http # Name for the port (optional but good practice)

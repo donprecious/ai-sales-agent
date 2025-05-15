@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: sales-rep-ai-ns # Matches the namespace created earlier
+  labels:
+    app: backend
+spec:
+  replicas: 2 # For high availability
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend-container
+          # Image placeholder - replace with your actual ECR image URL from Terraform outputs
+          # Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/sales-rep-ai-backend:latest
+          image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/${var.project_name}-${var.ecr_backend_repo_name}:latest
+          ports:
+            - containerPort: 3000 # Port the backend application listens on (from backend/Dockerfile)
+          envFrom:
+            - configMapRef:
+                name: backend-configmap # Load non-sensitive config from ConfigMap
+          env:
+            # Sensitive environment variables should be sourced from a Kubernetes Secret
+            # Create a Secret named 'backend-secrets' (or similar) with these keys.
+            - name: DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets # Replace with your actual Secret name
+                  key: DATABASE_URI
+            - name: ABLY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets # Replace with your actual Secret name
+                  key: ABLY_API_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets # Replace with your actual Secret name
+                  key: OPENAI_API_KEY
+            # OPENAI_MODEL can be in ConfigMap if not sensitive, or here if preferred from secret
+            - name: OPENAI_MODEL # Assuming this might also come from a secret or is fine in configmap
+              valueFrom:
+                secretKeyRef: # Or configMapKeyRef if moved to backend-configmap
+                  name: backend-secrets
+                  key: OPENAI_MODEL
+          livenessProbe:
+            httpGet:
+              path: /health # Standard health check endpoint, ensure this exists in your backend
+              port: 3000
+            initialDelaySeconds: 30 # Time to wait before first probe
+            periodSeconds: 10     # How often to probe
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health # Standard health check endpoint
+              port: 3000
+            initialDelaySeconds: 15 # Shorter delay for readiness
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            # Define sensible resource requests and limits
+            # Adjust these values based on your application's needs and monitoring
+            requests:
+              cpu: "250m" # 0.25 CPU core
+              memory: "512Mi" # 512 Megabytes
+            limits:
+              cpu: "500m" # 0.5 CPU core
+              memory: "1Gi"  # 1 Gigabyte

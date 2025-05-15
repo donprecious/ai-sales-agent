@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-configmap
+  namespace: sales-rep-ai-ns # Ensure this matches the namespace created in 01-namespace.yaml
+data:
+  # Frontend non-sensitive configurations
+  # VITE_BACKEND_API_URL should point to the internal Kubernetes service DNS name for the backend.
+  # The format is http://<service-name>.<namespace>.svc.cluster.local
+  # In this case, service 'backend-service' in namespace 'sales-rep-ai-ns'.
+  VITE_BACKEND_API_URL: "http://backend-service.sales-rep-ai-ns.svc.cluster.local"
+
+  # Add other non-sensitive environment variables from frontend/.env here if any.
+  # For example, VITE_ABLY_API_KEY is sensitive and should be managed via a Secret if it were a backend key.
+  # However, for Vite, environment variables prefixed with VITE_ are embedded at build time
+  # and are thus public. If it's a public key, it can stay here. If it's meant to be secret,
+  # the frontend architecture might need adjustment for runtime configuration or it's not truly a secret.
+  # For now, assuming VITE_ABLY_API_KEY is a public key for client-side SDK initialization.
+  VITE_ABLY_API_KEY: "placeholder-ably-public-key" # Replace with actual public key or manage differently if sensitive

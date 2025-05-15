@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: sales-rep-ai-ns # Matches the namespace created earlier
+  labels:
+    app: frontend
+spec:
+  replicas: 2 # For high availability
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend-container
+          # Image placeholder - replace with your actual ECR image URL from Terraform outputs
+          # Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/sales-rep-ai-frontend:latest
+          image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/${var.project_name}-${var.ecr_frontend_repo_name}:latest
+          ports:
+            # Port the frontend web server (e.g., Nginx) inside the container listens on.
+            # Typically 80 for production builds.
+            # Note: Your current frontend/Dockerfile exposes 5173 for 'npm run dev'.
+            # For production, this Dockerfile should build static assets and use a web server like Nginx.
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: frontend-configmap # Load non-sensitive config from ConfigMap
+          # If VITE_ABLY_API_KEY needs to be a secret, manage it similarly to backend secrets:
+          # env:
+          #   - name: VITE_ABLY_API_KEY
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: frontend-secrets # Create a Secret named 'frontend-secrets'
+          #         key: VITE_ABLY_API_KEY
+          livenessProbe:
+            httpGet:
+              path: / # Root path should be available
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: / # Root path should be available
+              port: 80
+            initialDelaySeconds: 5 # Shorter delay for readiness
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            # Define sensible resource requests and limits
+            # Adjust these values based on your application's needs and monitoring
+            requests:
+              cpu: "100m" # 0.1 CPU core (frontend is often less CPU intensive)
+              memory: "128Mi" # 128 Megabytes
+            limits:
+              cpu: "250m" # 0.25 CPU core
+              memory: "256Mi" # 256 Megabytes

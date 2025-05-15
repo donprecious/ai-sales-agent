@@ -1,0 +1,4 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sales-rep-ai-ns # Namespace to logically isolate application resources
