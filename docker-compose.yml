@@ -1,33 +1,33 @@
 version: '3.8'
 
 services:
-  # backend:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   env_file:
-  #     - ./backend/.env
-  #   volumes:
-  #     - ./backend:/usr/src/app
-  #     - /usr/src/app/node_modules
-  #   depends_on:
-  #     - mongo
-  #   command: npm run start:dev
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - mongo
+    command: npm run start:dev
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "5173:5173"
-  #   env_file:
-  #     - ./frontend/.env
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   command: npm run dev -- --host
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host
 
   mongo:
     image: mongo:latest
