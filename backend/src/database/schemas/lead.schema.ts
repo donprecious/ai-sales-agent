@@ -31,7 +31,7 @@ export enum RelevanceTag {
 
 @Schema({ timestamps: true }) // Enable automatic createdAt and updatedAt fields
 export class Lead {
-  @Prop({ type: String, required: true, unique: true, index: true })
+  @Prop({ type: String, required: true, index: true })
   email: string;
 
   @Prop({ type: String })
