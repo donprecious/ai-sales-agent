@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom'; // Added Link
-import { getLeadById } from '../services/leadService'; // Import the actual service
+import { useParams, Link as RouterLink } from 'react-router-dom';
+import { getLeadById } from '../services/leadService';
+import { Box, Paper, Typography, CircularProgress, Link, Chip } from '@mui/material';
 
-// Define a type for the Lead object (can be shared or imported from leadService.ts or a central types file)
+// Define a type for the Lead object
 interface ChatMessage {
   sender: 'user' | 'ai';
   message: string;
@@ -38,12 +39,14 @@ const LeadDetailPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        console.log('Fetching lead details for ID:', leadId);
         const data = await getLeadById(leadId);
         setLead(data);
-
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch lead details.');
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message || 'Failed to fetch lead details.');
+        } else {
+          setError('An unknown error occurred while fetching lead details.');
+        }
         console.error(err);
       } finally {
         setLoading(false);
@@ -53,96 +56,112 @@ const LeadDetailPage: React.FC = () => {
     fetchLeadDetails();
   }, [leadId]);
 
-  if (loading) return <p>Loading lead details...</p>;
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
-  if (!lead) return <p>Lead not found.</p>;
+  if (loading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+      <CircularProgress />
+      <Typography sx={{ ml: 2 }}>Loading lead details...</Typography>
+    </Box>
+  );
+  if (error) return <Typography color="error" sx={{ p: 3, textAlign: 'center' }}>{error}</Typography>;
+  if (!lead) return <Typography sx={{ p: 3, textAlign: 'center' }}>Lead not found.</Typography>;
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <Link to="/admin/leads" style={{ marginBottom: '20px', display: 'inline-block' }}>&larr; Back to All Leads</Link>
-      <h1>Lead Details: {lead.email}</h1>
+    <Box sx={{ p: 3, color: 'text.primary', flexGrow: 1 /* Allow content to take space */ }}>
+      <Link component={RouterLink} to="/admin/leads" sx={{ mb: 2, display: 'inline-block', color: 'primary.main' }}>
+        &larr; Back to All Leads
+      </Link>
+      <Typography variant="h4" component="h1" gutterBottom sx={{ color: 'text.primary', mb: 3 }}>
+        Lead Details: {lead.email}
+      </Typography>
       
-      <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-        <p><strong>ID:</strong> {lead._id}</p>
-        <p><strong>Email:</strong> {lead.email}</p>
-        <p><strong>Company:</strong> {lead.companyName || 'N/A'}</p>
-        <p><strong>Status:</strong> <span style={getStatusStyle(lead.status)}>{lead.status}</span></p>
-        <p><strong>Qualification:</strong> <span style={getRelevanceStyle(lead.relevanceTag)}>{lead.relevanceTag}</span></p>
-        <p><strong>Calendly Link Clicked:</strong> {lead.calendlyLinkClicked ? 'Yes' : 'No'}</p>
-        <p><strong>Clarification Attempts:</strong> {lead.clarificationAttempts}</p>
-        <p><strong>Created:</strong> {new Date(lead.createdAt).toLocaleString()}</p>
-        <p><strong>Last Updated:</strong> {new Date(lead.updatedAt).toLocaleString()}</p>
-      </div>
+      <Paper elevation={3} sx={{ mb: 3, p: 2.5 /* MuiPaper theme styles will apply */ }}>
+        <Typography variant="body1" gutterBottom><strong>ID:</strong> {lead._id}</Typography>
+        <Typography variant="body1" gutterBottom><strong>Email:</strong> {lead.email}</Typography>
+        <Typography variant="body1" gutterBottom><strong>Company:</strong> {lead.companyName || 'N/A'}</Typography>
+        <Typography variant="body1" gutterBottom>
+          <strong>Status:</strong> <Chip label={lead.status} sx={getStatusChipStyle(lead.status)} size="small" />
+        </Typography>
+        <Typography variant="body1" gutterBottom>
+          <strong>Qualification:</strong> <Chip label={lead.relevanceTag} sx={getRelevanceChipStyle(lead.relevanceTag)} size="small" />
+        </Typography>
+        <Typography variant="body1" gutterBottom><strong>Calendly Link Clicked:</strong> {lead.calendlyLinkClicked ? 'Yes' : 'No'}</Typography>
+        <Typography variant="body1" gutterBottom><strong>Clarification Attempts:</strong> {lead.clarificationAttempts}</Typography>
+        <Typography variant="body1" gutterBottom><strong>Created:</strong> {new Date(lead.createdAt).toLocaleString()}</Typography>
+        <Typography variant="body1"><strong>Last Updated:</strong> {new Date(lead.updatedAt).toLocaleString()}</Typography>
+      </Paper>
 
-      <h2>Conversation History</h2>
-      <div style={{ border: '1px solid #ccc', borderRadius: '5px', maxHeight: '500px', overflowY: 'auto' }}>
+      <Typography variant="h5" component="h2" gutterBottom sx={{ color: 'text.primary', mt: 4, mb: 2 }}>
+        Conversation History
+      </Typography>
+      <Paper elevation={3} sx={{ maxHeight: '500px', overflowY: 'auto', p: 1 /* MuiPaper theme styles will apply */ }}>
         {lead.chatHistory.length > 0 ? (
           lead.chatHistory.map((msg, index) => (
-            <div key={index} style={chatMessageStyle(msg.sender)}>
-              <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>
+            <Box key={index} sx={chatMessageStyle(msg.sender)}>
+              <Typography variant="caption" sx={{ display: 'block', fontWeight: 'bold', color: msg.sender === 'user' ? 'primary.light' : 'secondary.light' }}>
                 {msg.sender === 'user' ? 'User' : 'AI Assistant'}
-                <span style={{ fontSize: '0.8em', color: '#777', marginLeft: '10px' }}>
+                <Typography component="span" variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
                   ({new Date(msg.timestamp).toLocaleTimeString()})
-                </span>
-              </p>
-              <p style={{ margin: 0 }}>{msg.message}</p>
-            </div>
+                </Typography>
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.primary' }}>{msg.message}</Typography>
+            </Box>
           ))
         ) : (
-          <p style={{ padding: '10px' }}>No conversation history available.</p>
+          <Typography sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>No conversation history available.</Typography>
         )}
-      </div>
-    </div>
+      </Paper>
+    </Box>
   );
 };
 
 const chatMessageStyle = (sender: 'user' | 'ai'): React.CSSProperties => ({
-  padding: '10px 15px',
-  margin: '10px',
-  borderRadius: '10px',
-  backgroundColor: sender === 'user' ? '#e1f5fe' : '#f1f1f1',
+  padding: '8px 12px',
+  margin: '8px',
+  borderRadius: '12px',
+  backgroundColor: sender === 'user' ? 'rgba(167, 139, 250, 0.2)' : 'rgba(80, 80, 80, 0.3)', // User: light purple tint, AI: darker semi-transparent
+  color: 'rgba(255, 255, 255, 0.9)', // Ensure text is light
   textAlign: sender === 'user' ? 'right' : 'left',
   alignSelf: sender === 'user' ? 'flex-end' : 'flex-start',
-  maxWidth: '70%',
-  marginLeft: sender === 'user' ? 'auto' : '0',
-  marginRight: sender === 'ai' ? 'auto' : '0',
+  maxWidth: '75%',
+  marginLeft: sender === 'user' ? 'auto' : '10px', // Add some margin for AI messages
+  marginRight: sender === 'ai' ? 'auto' : '10px', // Add some margin for User messages
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
 });
 
-const getStatusStyle = (status: string): React.CSSProperties => {
-  let backgroundColor = '#eee';
-  let color = '#333';
+const getStatusChipStyle = (status: string): React.CSSProperties => {
+  let backgroundColor = 'rgba(255, 255, 255, 0.1)'; // Default semi-transparent light
+  let color = 'rgba(255, 255, 255, 0.8)';
   if (status === 'completed') {
-    backgroundColor = '#d4edda'; // green
-    color = '#155724';
+    backgroundColor = 'rgba(76, 175, 80, 0.3)'; // Semi-transparent green
+    color = '#d4edda';
   } else if (status === 'pending') {
-    backgroundColor = '#fff3cd'; // yellow
-    color = '#856404';
+    backgroundColor = 'rgba(255, 193, 7, 0.3)'; // Semi-transparent yellow
+    color = '#fff3cd';
   }
   return {
-    padding: '3px 8px',
-    borderRadius: '4px',
-    fontWeight: 'bold',
     backgroundColor,
     color,
+    fontWeight: 'bold',
+    border: `1px solid ${backgroundColor.replace('0.3', '0.5')}` // Slightly more opaque border
   };
 };
 
-const getRelevanceStyle = (relevance: string): React.CSSProperties => {
-  let backgroundColor = '#e9ecef';
-  let color = '#495057';
+const getRelevanceChipStyle = (relevance: string): React.CSSProperties => {
+  let backgroundColor = 'rgba(255, 255, 255, 0.1)';
+  let color = 'rgba(255, 255, 255, 0.8)';
   if (relevance === 'Hot lead' || relevance === 'Very big potential customer') {
-    backgroundColor = '#f8d7da'; // red-ish for hot
-    color = '#721c24';
+    backgroundColor = 'rgba(244, 67, 54, 0.3)'; // Semi-transparent red
+    color = '#f8d7da';
   } else if (relevance === 'Weak lead') {
-    backgroundColor = '#cce5ff'; // blue-ish for weak
-    color = '#004085';
+    backgroundColor = 'rgba(33, 150, 243, 0.3)'; // Semi-transparent blue
+    color = '#cce5ff';
   }
   return {
-    padding: '3px 8px',
-    borderRadius: '4px',
-    fontWeight: 'bold',
     backgroundColor,
     color,
+    fontWeight: 'bold',
+    border: `1px solid ${backgroundColor.replace('0.3', '0.5')}`
   };
 };
 
